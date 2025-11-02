@@ -94,6 +94,36 @@
             font-style: italic;
             text-align: center;
         }
+        .shopping-list-btn {
+            margin-top: 20px;
+            background: #27ae60;
+        }
+        .shopping-list-btn:hover {
+            background: #229954;
+        }
+        #ingredientsSection {
+            margin-top: 30px;
+            text-align: left;
+            display: none;
+        }
+        #ingredientsSection h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        #ingredientsContent {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #27ae60;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -104,6 +134,11 @@
         <div id="mealsList">
             <h2>Your Meals:</h2>
             <div id="mealsContainer"></div>
+        </div>
+        <button class="shopping-list-btn" onclick="createShoppingList()">Create shopping list</button>
+        <div id="ingredientsSection">
+            <h2>Ingredients needed:</h2>
+            <div id="ingredientsContent"></div>
         </div>
     </div>
 
@@ -169,6 +204,33 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('Error adding meal');
+            });
+        }
+
+        function createShoppingList() {
+            const ingredientsSection = document.getElementById('ingredientsSection');
+            const ingredientsContent = document.getElementById('ingredientsContent');
+            
+            ingredientsSection.style.display = 'block';
+            ingredientsContent.innerHTML = '<div class="loading">Generating shopping list with AI...</div>';
+            
+            fetch('/shopping-list', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    ingredientsContent.innerHTML = `<div style="color: #e74c3c;">${data.error}</div>`;
+                } else {
+                    ingredientsContent.textContent = data.ingredients;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                ingredientsContent.innerHTML = '<div style="color: #e74c3c;">Error generating shopping list. Please try again.</div>';
             });
         }
 

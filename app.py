@@ -2,8 +2,11 @@ import os
 from flask import Flask, render_template, jsonify, request
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from google import genai
 
 app = Flask(__name__)
+
+gemini_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 def get_db_connection():
     conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -68,6 +71,39 @@ def delete_meal(meal_id):
     conn.close()
     
     return jsonify({'success': True}), 200
+
+@app.route('/shopping-list', methods=['POST'])
+def create_shopping_list():
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute('SELECT name FROM meals ORDER BY created_at DESC')
+    meals = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    if not meals:
+        return jsonify({'error': 'No meals found. Please add some meals first.'}), 400
+    
+    meal_names = [meal['name'] for meal in meals]
+    meal_list = ', '.join(meal_names)
+    
+    prompt = f"""I have the following meals planned: {meal_list}
+
+Please provide a comprehensive shopping list of all ingredients needed to make these meals. 
+Format the response as a clear, organized list of ingredients with quantities where appropriate.
+Group similar items together (e.g., all vegetables, all proteins, etc.)."""
+    
+    try:
+        response = gemini_client.models.generate_content(
+            model="gemini-2.0-flash-exp",
+            contents=prompt
+        )
+        
+        ingredients = response.text if response.text else "Unable to generate shopping list."
+        return jsonify({'ingredients': ingredients}), 200
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to generate shopping list: {str(e)}'}), 500
 
 if __name__ == '__main__':
     init_db()
