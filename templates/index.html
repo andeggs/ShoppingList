@@ -56,12 +56,26 @@
         button:active {
             transform: scale(0.98);
         }
-        #message {
+        #mealsList {
             margin-top: 30px;
-            font-size: 20px;
-            color: #667eea;
-            min-height: 30px;
-            font-weight: bold;
+            text-align: left;
+        }
+        #mealsList h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .meal-item {
+            background: #f5f5f5;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        .no-meals {
+            color: #999;
+            font-style: italic;
+            text-align: center;
         }
     </style>
 </head>
@@ -69,22 +83,66 @@
     <div class="container">
         <h1>Enter your meal</h1>
         <input type="text" id="mealInput" placeholder="Type your meal here...">
-        <button onclick="getRandomMessage()">CREATE SHOPPING LIST</button>
-        <div id="message"></div>
+        <button onclick="addMeal()">Add meal</button>
+        <div id="mealsList">
+            <h2>Your Meals:</h2>
+            <div id="mealsContainer"></div>
+        </div>
     </div>
 
     <script>
-        function getRandomMessage() {
-            fetch('/random-message')
+        function loadMeals() {
+            fetch('/meals')
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('message').textContent = data.message;
+                    const container = document.getElementById('mealsContainer');
+                    if (data.meals && data.meals.length > 0) {
+                        container.innerHTML = data.meals.map(meal => 
+                            `<div class="meal-item">${meal.name}</div>`
+                        ).join('');
+                    } else {
+                        container.innerHTML = '<div class="no-meals">No meals added yet</div>';
+                    }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    document.getElementById('message').textContent = 'Error fetching message';
                 });
         }
+
+        function addMeal() {
+            const input = document.getElementById('mealInput');
+            const mealName = input.value.trim();
+            
+            if (!mealName) {
+                alert('Please enter a meal name');
+                return;
+            }
+            
+            fetch('/meals', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: mealName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                input.value = '';
+                loadMeals();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error adding meal');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', loadMeals);
+        
+        document.getElementById('mealInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addMeal();
+            }
+        });
     </script>
 </body>
 </html>

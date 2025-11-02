@@ -1,6 +1,5 @@
 import os
-import random
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
@@ -14,24 +13,14 @@ def init_db():
     conn = get_db_connection()
     cur = conn.cursor()
     
-    cur.execute('DROP TABLE IF EXISTS messages')
+    cur.execute('DROP TABLE IF EXISTS meals')
     cur.execute('''
-        CREATE TABLE messages (
+        CREATE TABLE meals (
             id SERIAL PRIMARY KEY,
-            content TEXT NOT NULL
+            name TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    
-    messages = [
-        "Have a wonderful day!",
-        "You're doing amazing!",
-        "Keep up the great work!",
-        "Believe in yourself!",
-        "Success is just around the corner!"
-    ]
-    
-    for msg in messages:
-        cur.execute('INSERT INTO messages (content) VALUES (%s)', (msg,))
     
     conn.commit()
     cur.close()
@@ -41,19 +30,34 @@ def init_db():
 def index():
     return render_template('index.html')
 
-@app.route('/random-message')
-def random_message():
+@app.route('/meals', methods=['GET'])
+def get_meals():
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute('SELECT content FROM messages ORDER BY RANDOM() LIMIT 1')
-    message = cur.fetchone()
+    cur.execute('SELECT id, name, created_at FROM meals ORDER BY created_at DESC')
+    meals = cur.fetchall()
     cur.close()
     conn.close()
     
-    if message:
-        return jsonify({'message': message['content']})
-    else:
-        return jsonify({'message': 'No messages found'})
+    return jsonify({'meals': meals})
+
+@app.route('/meals', methods=['POST'])
+def add_meal():
+    data = request.get_json()
+    meal_name = data.get('name', '').strip()
+    
+    if not meal_name:
+        return jsonify({'error': 'Meal name cannot be empty'}), 400
+    
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute('INSERT INTO meals (name) VALUES (%s) RETURNING id, name, created_at', (meal_name,))
+    new_meal = cur.fetchone()
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return jsonify({'meal': new_meal}), 201
 
 if __name__ == '__main__':
     init_db()
