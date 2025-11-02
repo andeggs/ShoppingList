@@ -71,6 +71,23 @@
             margin-bottom: 10px;
             border-radius: 5px;
             border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .meal-name {
+            flex-grow: 1;
+        }
+        .delete-btn {
+            color: #e74c3c;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 8px;
+            transition: color 0.3s;
+        }
+        .delete-btn:hover {
+            color: #c0392b;
         }
         .no-meals {
             color: #999;
@@ -98,7 +115,10 @@
                     const container = document.getElementById('mealsContainer');
                     if (data.meals && data.meals.length > 0) {
                         container.innerHTML = data.meals.map(meal => 
-                            `<div class="meal-item">${meal.name}</div>`
+                            `<div class="meal-item">
+                                <span class="meal-name">${meal.name}</span>
+                                <span class="delete-btn" onclick="deleteMeal(${meal.id})">✕</span>
+                            </div>`
                         ).join('');
                     } else {
                         container.innerHTML = '<div class="no-meals">No meals added yet</div>';
@@ -107,6 +127,22 @@
                 .catch(error => {
                     console.error('Error:', error);
                 });
+        }
+
+        function deleteMeal(mealId) {
+            if (confirm('Are you sure you want to delete this meal?')) {
+                fetch(`/meals/${mealId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadMeals();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting meal');
+                });
+            }
         }
 
         function addMeal() {

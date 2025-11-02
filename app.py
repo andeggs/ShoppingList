@@ -59,6 +59,17 @@ def add_meal():
     
     return jsonify({'meal': new_meal}), 201
 
+@app.route('/meals/<int:meal_id>', methods=['DELETE'])
+def delete_meal(meal_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM meals WHERE id = %s', (meal_id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return jsonify({'success': True}), 200
+
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5000, debug=True)
