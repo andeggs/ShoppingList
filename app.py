@@ -13,9 +13,8 @@ def init_db():
     conn = get_db_connection()
     cur = conn.cursor()
     
-    cur.execute('DROP TABLE IF EXISTS meals')
     cur.execute('''
-        CREATE TABLE meals (
+        CREATE TABLE IF NOT EXISTS meals (
             id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
