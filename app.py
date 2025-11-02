@@ -87,11 +87,28 @@ def create_shopping_list():
     meal_names = [meal['name'] for meal in meals]
     meal_list = ', '.join(meal_names)
     
-    prompt = f"""I have the following meals planned: {meal_list}
+    prompt = f"""**Generate a consolidated shopping list for the following meals in well-formatted JSON:**
 
-Please provide a comprehensive shopping list of all ingredients needed to make these meals. 
-Format the response as a clear, organized list of ingredients with quantities where appropriate.
-Group similar items together (e.g., all vegetables, all proteins, etc.)."""
+{meal_list}
+
+**The JSON object must contain an array of ingredients.** Each ingredient object must include:
+1.  **"name"**: The name of the ingredient.
+2.  **"is_gf_alternative_available"**: A boolean value (true/false) indicating if a Gluten-Free alternative exists.
+3.  **"is_lf_alternative_available"**: A boolean value (true/false) indicating if a Lactose-Free alternative exists.
+4.  **"meals"**: An array listing the meals this ingredient is used in.
+
+**Example JSON structure:**
+{{
+  "shopping_list": [
+    {{
+      "name": "Spaghetti",
+      "is_gf_alternative_available": true,
+      "is_lf_alternative_available": false,
+      "meals": ["spaghetti bolognese"]
+    }},
+  ]
+}}
+**Important:** Return ONLY the JSON object, no markdown code blocks, no additional text."""
     
     try:
         response = gemini_client.models.generate_content(
