@@ -184,11 +184,14 @@
             <h2>Your Meals:</h2>
             <div id="mealsContainer"></div>
         </div>
+        <button class="shopping-list-btn" onclick="deleteAllMeals()">Delete all meals</button>
         <button class="shopping-list-btn" onclick="createShoppingList()">Create shopping list</button>
         <div id="ingredientsSection">
             <h2>Ingredients needed:</h2>
             <div id="ingredientsContent"></div>
         </div>
+        <div id="warningMessage">
+            <p style="color: #808080; font-size: 14px; margin-top: 20px;">Note: The shopping list is AI-generated so may contain inaccuracies. Please check if there are lactose-free and gluten-free products available.</p>
     </div>
 
     <script>
@@ -225,6 +228,22 @@
                 .catch(error => {
                     console.error('Error:', error);
                     alert('Error deleting meal');
+                });
+            }
+        }
+
+        function deleteAllMeals() {
+            if (confirm('Are you sure you want to delete all meals?')) {
+                fetch('/delete-all-meals', {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadMeals();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting all meals');
                 });
             }
         }

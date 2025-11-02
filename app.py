@@ -73,6 +73,18 @@ def delete_meal(meal_id):
     
     return jsonify({'success': True}), 200
 
+@app.route('/delete-all-meals', methods=['DELETE'])
+def delete_all_meals():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM meals')
+    deleted_count = cur.rowcount  # Get number of deleted rows
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({'success': True, 'deleted_count': deleted_count}), 200
+
 @app.route('/shopping-list', methods=['POST'])
 def create_shopping_list():
     conn = get_db_connection()
@@ -94,8 +106,8 @@ def create_shopping_list():
 
 **The JSON object must contain an array of ingredients.** Each ingredient object must include:
 1.  **"name"**: The name of the ingredient.
-2.  **"is_gf_alternative_available"**: A boolean value (true/false) indicating if a Gluten-Free alternative exists.
-3.  **"is_lf_alternative_available"**: A boolean value (true/false) indicating if a Lactose-Free alternative exists.
+2.  **"is_gf_alternative_available"**: A boolean value (true/false) indicating if the ingredient commonly contains gluten and a Gluten-Free alternative is readily available in grocery shops.
+3.  **"is_lf_alternative_available"**: A boolean value (true/false) indicating if the ingredient commonly contains lactose and a Lactose-Free alternative is readily available in grocery shops.
 4.  **"meals"**: An array listing the meals this ingredient is used in.
 
 **Example JSON structure:**
@@ -114,9 +126,15 @@ def create_shopping_list():
     response = None
     try:
         response = gemini_client.models.generate_content(
-            model="gemini-2.0-flash-exp",
+            model="gemini-2.5-flash",
             contents=prompt
         )
+
+        response_text = response.text.strip()
+        print("=" * 50)
+        print("RAW RESPONSE FROM GEMINI:")
+        print(response_text)
+        print("=" * 50)
         
         if not response.text:
             return jsonify({'error': 'Unable to generate shopping list.'}), 500
