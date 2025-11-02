@@ -10,11 +10,11 @@ app = Flask(__name__)
 gemini_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 #Change depending on whether deploying on Replit or Railway
-MyDatabaseURL=${{ Postgres.DATABASE_URL }}
+#MyDatabaseURL=${{ Postgres.DATABASE_URL }}
 #MyDatabaseURL=os.environ['DATABASE_URL']
 
 def get_db_connection():
-    conn = psycopg2.connect(MyDatabaseURL)
+    conn = psycopg2.connect(os.environ['DATABASE_URL'])
     return conn
 
 def init_db():
