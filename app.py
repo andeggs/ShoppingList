@@ -1,4 +1,5 @@
 import os
+import json
 from flask import Flask, render_template, jsonify, request
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -110,15 +111,33 @@ def create_shopping_list():
 }}
 **Important:** Return ONLY the JSON object, no markdown code blocks, no additional text."""
     
+    response = None
     try:
         response = gemini_client.models.generate_content(
             model="gemini-2.0-flash-exp",
             contents=prompt
         )
         
-        ingredients = response.text if response.text else "Unable to generate shopping list."
-        return jsonify({'ingredients': ingredients}), 200
+        if not response.text:
+            return jsonify({'error': 'Unable to generate shopping list.'}), 500
         
+        response_text = response.text.strip()
+        if response_text.startswith('```json'):
+            response_text = response_text[7:]
+        if response_text.startswith('```'):
+            response_text = response_text[3:]
+        if response_text.endswith('```'):
+            response_text = response_text[:-3]
+        response_text = response_text.strip()
+        
+        shopping_data = json.loads(response_text)
+        return jsonify(shopping_data), 200
+        
+    except json.JSONDecodeError as e:
+        error_msg = f'Failed to parse shopping list: {str(e)}'
+        if response and response.text:
+            return jsonify({'error': error_msg, 'raw_response': response.text}), 500
+        return jsonify({'error': error_msg}), 500
     except Exception as e:
         return jsonify({'error': f'Failed to generate shopping list: {str(e)}'}), 500
 

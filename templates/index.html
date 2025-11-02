@@ -116,13 +116,62 @@
             padding: 20px;
             border-radius: 5px;
             border-left: 4px solid #27ae60;
-            white-space: pre-wrap;
-            line-height: 1.6;
+        }
+        .ingredient-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .ingredient-checkbox {
+            margin-top: 3px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .ingredient-details {
+            flex-grow: 1;
+        }
+        .ingredient-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .ingredient-badges {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-gf {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .badge-lf {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        .ingredient-meals {
+            font-size: 13px;
+            color: #666;
+            font-style: italic;
         }
         .loading {
             text-align: center;
             color: #667eea;
             font-style: italic;
+            padding: 20px;
         }
     </style>
 </head>
@@ -224,8 +273,34 @@
             .then(data => {
                 if (data.error) {
                     ingredientsContent.innerHTML = `<div style="color: #e74c3c;">${data.error}</div>`;
+                } else if (data.shopping_list && Array.isArray(data.shopping_list)) {
+                    ingredientsContent.innerHTML = data.shopping_list.map(ingredient => {
+                        let badges = '';
+                        if (ingredient.is_gf_alternative_available) {
+                            badges += '<span class="badge badge-gf">GF Available</span>';
+                        }
+                        if (ingredient.is_lf_alternative_available) {
+                            badges += '<span class="badge badge-lf">LF Available</span>';
+                        }
+                        
+                        let mealsText = '';
+                        if (ingredient.meals && ingredient.meals.length > 0) {
+                            mealsText = `<div class="ingredient-meals">Used in: ${ingredient.meals.join(', ')}</div>`;
+                        }
+                        
+                        return `
+                            <div class="ingredient-item">
+                                <input type="checkbox" class="ingredient-checkbox">
+                                <div class="ingredient-details">
+                                    <div class="ingredient-name">${ingredient.name}</div>
+                                    ${badges ? `<div class="ingredient-badges">${badges}</div>` : ''}
+                                    ${mealsText}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
                 } else {
-                    ingredientsContent.textContent = data.ingredients;
+                    ingredientsContent.innerHTML = '<div style="color: #e74c3c;">Invalid response format from AI.</div>';
                 }
             })
             .catch(error => {
