@@ -24,7 +24,21 @@
         }
         h1 {
             color: #333;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
         }
         button {
             background: #667eea;
@@ -54,6 +68,7 @@
 <body>
     <div class="container">
         <h1>Enter your meal</h1>
+        <input type="text" id="mealInput" placeholder="Type your meal here...">
         <button onclick="getRandomMessage()">CREATE SHOPPING LIST</button>
         <div id="message"></div>
     </div>
